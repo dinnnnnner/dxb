@@ -1,0 +1,50 @@
+{
+  "frames": 48700,
+  "alarm_frames": 3833,
+  "alarm_segments": 1,
+  "first_alarm_time_s": 385.95,
+  "last_alarm_time_s": 424.27,
+  "segments": [
+    {
+      "start_time_s": 385.95,
+      "end_time_s": 424.27,
+      "frame_count": 3833
+    }
+  ],
+  "input_file": "/home/zich/py/ly/0122/Turn/20260122_yuan_65_majisiwandao_rr100_blowout.txt",
+  "case_name": "0122__Turn__20260122_yuan_65_majisiwandao_rr100_blowout",
+  "case_dir": "/home/zich/py/wheel_cog_outputs/fast_alarm_batch_outputs/0122__Turn__20260122_yuan_65_majisiwandao_rr100_blowout",
+  "wheel_speed_csv": "/home/zich/py/wheel_cog_outputs/fast_alarm_batch_outputs/0122__Turn__20260122_yuan_65_majisiwandao_rr100_blowout/wheel_speed_raw_vs_corrected.csv",
+  "alarm_output_file": "/home/zich/py/wheel_cog_outputs/fast_alarm_batch_outputs/0122__Turn__20260122_yuan_65_majisiwandao_rr100_blowout/alarm_detection_results_fast.csv",
+  "series": "corrected",
+  "algorithm": "fast_ewma_leaky_evidence",
+  "config": {
+    "min_avg_speed": 20.0,
+    "fast_alpha": 0.45,
+    "slow_alpha": 0.001046674642901591,
+    "filter_alpha": 0.65,
+    "output_scale": 200.0,
+    "use_wheel_feature": false,
+    "warmup_frames": 3000,
+    "noise_alpha": 0.00402139496108789,
+    "center_alpha": 0.0435206345569064,
+    "noise_floor": 0.08,
+    "enter_min": 0.7476840122076729,
+    "enter_noise_gain": 3.140654072838856,
+    "exit_min": 0.1928536858667876,
+    "exit_noise_gain": 2.6050079637872177,
+    "evidence_decay": 0.9709366109407416,
+    "evidence_on": 1.419128576581635,
+    "evidence_off": 0.2849447795174631,
+    "evidence_input_cap": 1.1,
+    "instant_on": 999.0,
+    "freeze_enter": 0.38225805635222615,
+    "recovery_enabled": true,
+    "recovery_frames": 100,
+    "recovery_holdoff_frames": 20,
+    "recovery_slow_alpha": 0.08,
+    "recovery_center_alpha": 0.2,
+    "recovery_noise_alpha": 0.05,
+    "hold_alarm_below_min_speed": true
+  }
+}

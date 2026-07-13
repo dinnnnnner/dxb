@@ -1,1 +1,14 @@
-*.py
+# Python cache and local environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Jupyter temporary files
+.ipynb_checkpoints/
+
+# Locally generated evaluation and augmentation artifacts
+wheel_cog_outputs/augmented_event_dataset*/
+wheel_cog_outputs/blowout_manual_labeling_package/
+wheel_cog_outputs/fast_alarm_event_eval/
+wheel_cog_outputs/fast_alarm_label_eval/

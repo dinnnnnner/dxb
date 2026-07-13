@@ -8,15 +8,15 @@
 
 | 功能 | 文件 |
 |---|---|
-| 原始齿时间戳解析、轮速计算、齿误差修正 | [`process_wheel_cog.py`](./process_wheel_cog.py) |
-| 批量处理 `ly/**/*.txt` | [`batch_process_ly_fast_alarm.py`](./batch_process_ly_fast_alarm.py) |
-| 批量结果汇总与基础 HTML 展示 | [`process_wheel_speeds_fast_batch_display.py`](./process_wheel_speeds_fast_batch_display.py) |
-| 快速爆胎报警核心 | [`alarm_detection_local_fast.py`](./alarm_detection_local_fast.py) |
-| 生成待人工校正的事件时刻参考标签 | [`generate_event_time_labels.py`](./generate_event_time_labels.py) |
-| 基于 `event_time` 的真实事件评估 | [`evaluate_fast_alarm_with_labels.py`](./evaluate_fast_alarm_with_labels.py) |
-| 增强数据生成 | [`build_augmented_event_dataset.py`](./build_augmented_event_dataset.py) |
-| 增强数据批量评价与静态展示 | [`evaluate_augmented_fast_batch_display.py`](./evaluate_augmented_fast_batch_display.py) |
-| 按需生成图表的动态查看器 | [`serve_augmented_fast_batch_display.py`](./serve_augmented_fast_batch_display.py) |
+| 原始齿时间戳解析、轮速计算、齿误差修正 | [`process_wheel_cog.py`](./wheel_cog_outputs/process_wheel_cog.py) |
+| 批量处理 `ly/**/*.txt` | [`batch_process_ly_fast_alarm.py`](./wheel_cog_outputs/batch_process_ly_fast_alarm.py) |
+| 批量结果汇总与基础 HTML 展示 | [`process_wheel_speeds_fast_batch_display.py`](./wheel_cog_outputs/process_wheel_speeds_fast_batch_display.py) |
+| 快速爆胎报警核心 | [`alarm_detection_local_fast.py`](./wheel_cog_outputs/alarm_detection_local_fast.py) |
+| 生成待人工校正的事件时刻参考标签 | [`generate_event_time_labels.py`](./wheel_cog_outputs/generate_event_time_labels.py) |
+| 基于 `event_time` 的真实事件评估 | [`evaluate_fast_alarm_with_labels.py`](./wheel_cog_outputs/evaluate_fast_alarm_with_labels.py) |
+| 增强数据生成 | [`build_augmented_event_dataset.py`](./wheel_cog_outputs/build_augmented_event_dataset.py) |
+| 增强数据批量评价与静态展示 | [`evaluate_augmented_fast_batch_display.py`](./wheel_cog_outputs/evaluate_augmented_fast_batch_display.py) |
+| 按需生成图表的动态查看器 | [`serve_augmented_fast_batch_display.py`](./wheel_cog_outputs/serve_augmented_fast_batch_display.py) |
 
 ### 1.1 运行环境与首次启动
 

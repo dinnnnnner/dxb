@@ -55,21 +55,60 @@ jupyter lab
 
 ## 2. 端到端流程
 
+### 2.1 总览
+
 ```mermaid
-flowchart LR
-    A[ly/*.txt<br/>四轮齿时间戳] --> B[解析为 100 Hz 帧]
+flowchart TD
+    A[原始四轮齿时间戳] --> B[轮速预处理]
+    B --> C[快速报警算法]
+    C --> D[报警结果]
+    D --> E[事件评估与交互查看]
+```
+
+### 2.2 轮速预处理
+
+```mermaid
+flowchart TD
+    A[读取 ly/*.txt] --> B[解析为 100 Hz 帧]
     B --> C[时间戳差分与回绕处理]
     C --> D[48 齿角速度计算]
-    D --> E[离线齿相位误差修正]
-    E --> F[四轮 corrected rad/s]
-    F --> G[Fast / Slow EWMA]
-    G --> H[归一化四轮差分]
-    H --> I[combind 特征]
-    I --> J[动态中心与噪声估计]
-    J --> K[innovation]
-    K --> L[正负 evidence 累计]
-    L --> M[报警迟滞与恢复状态机]
-    M --> N[alarm / delay / false alarm]
+    D --> E[丢齿与低速检查]
+    E --> F[离线齿相位误差修正]
+    F --> G[四轮 corrected rad/s]
+```
+
+### 2.3 特征提取
+
+```mermaid
+flowchart TD
+    A[四轮 corrected rad/s] --> B[Fast / Slow EWMA]
+    B --> C[归一化四轮差分]
+    C --> D[combind 特征]
+    D --> E[单轮偏离与轮位候选]
+```
+
+### 2.4 报警判定
+
+```mermaid
+flowchart TD
+    A[combind 特征] --> B[动态中心与噪声估计]
+    B --> C[innovation 与动态阈值]
+    C --> D[正负 evidence 累计]
+    D --> E[报警迟滞与恢复状态机]
+    E --> F[alarm 与报警上升沿]
+```
+
+### 2.5 评估、增强与查看
+
+```mermaid
+flowchart TD
+    A[真实文件报警结果] --> B[Event-time 真实事件评估]
+    L[人工 Event-time 标签] --> B
+    A --> C[截取事件窗口]
+    L --> C
+    C --> D[生成事件与正常增强样本]
+    D --> E[增强数据批量评估]
+    E --> F[静态 HTML 或按需查看]
 ```
 
 默认数据链路是：

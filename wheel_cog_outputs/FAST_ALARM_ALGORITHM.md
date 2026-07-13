@@ -194,7 +194,7 @@ $$
 4. 对每个 phase 计算：
 
 $$
-factor_p \approx \operatorname{median}\left(\frac{\Delta t_p}{\text{lap mean}}\right)
+factor_p \approx \mathrm{median}\left(\frac{\Delta t_p}{\text{lap mean}}\right)
 $$
 
 5. 将 48 个 factor 归一化，使其平均值为 1。

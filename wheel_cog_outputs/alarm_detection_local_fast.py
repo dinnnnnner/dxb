@@ -48,7 +48,7 @@ class FastAlarmConfig:
     output_scale: float = 200.0
     use_wheel_feature: bool = False
     warmup_frames: int = 3000
-
+ 
     noise_alpha: float = 0.00402139496108789
     center_alpha: float = 0.0435206345569064
     noise_floor: float = 0.08

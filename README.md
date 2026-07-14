@@ -15,6 +15,7 @@
 | 生成待人工校正的事件时刻参考标签 | [`generate_event_time_labels.py`](./wheel_cog_outputs/generate_event_time_labels.py) |
 | 基于 `event_time` 的真实事件评估 | [`evaluate_fast_alarm_with_labels.py`](./wheel_cog_outputs/evaluate_fast_alarm_with_labels.py) |
 | 增强数据生成 | [`build_augmented_event_dataset.py`](./wheel_cog_outputs/build_augmented_event_dataset.py) |
+| 非爆胎道路与故障场景模拟 | [`generate_synthetic_road_scenarios.py`](./wheel_cog_outputs/generate_synthetic_road_scenarios.py) |
 | 增强数据批量评价与静态展示 | [`evaluate_augmented_fast_batch_display.py`](./wheel_cog_outputs/evaluate_augmented_fast_batch_display.py) |
 | 按需生成图表的动态查看器 | [`serve_augmented_fast_batch_display.py`](./wheel_cog_outputs/serve_augmented_fast_batch_display.py) |
 
@@ -773,14 +774,15 @@ speed_scale = 0.95～1.05
 
 共同缩放避免人为制造不合理的轮间差异。
 
-### 12.3 真实噪声叠加
+### 12.3 高斯噪声叠加
 
-从 `event_time - 10 秒`之前的正常数据构建噪声池：
+从 `event_time - 10 秒`之前的正常数据估计每个车轮的噪声标准差：
 
 1. 用 21 点中心滑动平均提取慢变化。
 2. `noise = normal - smooth`。
-3. 随机抽取连续噪声片段。
-4. 以 `0.10～0.50` 的 gain 叠加到事件或正常样本。
+3. 根据残差估计四轮各自的标准差。
+4. 独立采样零均值高斯噪声。
+5. 以 `0.10～0.50` 的 gain 叠加到事件或正常样本。
 
 ### 12.4 采样丢失
 

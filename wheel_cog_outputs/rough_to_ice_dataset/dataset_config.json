@@ -1,0 +1,36 @@
+{
+  "labels": "/home/zich/py/wheel_cog_outputs/blowout_manual_labeling_package/labeling_package/event_time_labels.csv",
+  "batch_summary": "/home/zich/py/wheel_cog_outputs/fast_alarm_batch_outputs/fast_alarm_batch_summary.csv",
+  "output_dir": "rough_to_ice_dataset",
+  "series": "corrected",
+  "scenarios": [
+    "rough_to_ice"
+  ],
+  "samples_per_scenario": 8,
+  "duration_s": 50.0,
+  "scenario_time_s": 40.0,
+  "scenario_jitter_s": 1.0,
+  "normal_guard_s": 15.0,
+  "min_mean_speed_rad_s": 20.0,
+  "max_slow_fraction": 0.05,
+  "wheelbase_m": 2.75,
+  "track_width_m": 1.6,
+  "tire_radius_m": 0.33,
+  "turn_lateral_accel_min_m_s2": 2.0,
+  "turn_lateral_accel_max_m_s2": 5.0,
+  "driven_axle": "rear",
+  "seed": 20260714,
+  "overwrite": false,
+  "sample_count": 8,
+  "scenario_counts": {
+    "rough_to_ice": 8
+  },
+  "wheel_mapping": {
+    "wheel0": "FL",
+    "wheel1": "FR",
+    "wheel2": "RL",
+    "wheel3": "RR"
+  },
+  "expected_blowout": 0,
+  "important": "These are synthetic wheel-speed signatures based on real pre-event windows. Use them for algorithm stress tests, not as evidence of real-road performance. Split evaluation by source_event_id."
+}

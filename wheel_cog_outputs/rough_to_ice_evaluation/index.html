@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Augmented fast alarm display</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 24px; color: #222; }
+h1 { margin-bottom: 8px; }
+.cards { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+.card { border: 1px solid #ddd; border-radius: 8px; padding: 12px 18px; min-width: 140px; }
+.label { color: #666; font-size: 13px; }
+.value { font-size: 24px; font-weight: 700; margin-top: 4px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { border-bottom: 1px solid #ddd; padding: 7px; text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+th { position: sticky; top: 0; background: #f5f5f5; }
+.status { font-weight: 700; }
+.PASS, .NORMAL_OK { color: #208020; }
+.EARLY_ALARM, .FALSE_ALARM, .MISS, .LATE, .ERROR { color: #c02020; }
+</style>
+</head>
+<body>
+<h1>Augmented fast alarm display</h1>
+<p>点击带链接的 sample_id 查看交互曲线。红色区域是算法报警，绿色虚线是 event_time，绿色浅色区域是检测时限。</p>
+<div class="cards"><div class="card"><div class="label">Baseline 2s</div><div class="value">0/0</div></div><div class="card"><div class="label">Augmented 2s</div><div class="value">0/0</div></div><div class="card"><div class="label">Early alarm</div><div class="value">0</div></div><div class="card"><div class="label">Miss</div><div class="value">0</div></div><div class="card"><div class="label">Normal false alarm</div><div class="value">1/8</div></div></div>
+<table>
+<thead><tr><th>sample</th><th>type</th><th>source</th><th>status</th><th>delay_s</th><th>alarms</th><th>early</th><th>time scale</th><th>speed scale</th><th>noise</th></tr></thead>
+<tbody><tr><td><a href="html/rough_to_ice_001.html">rough_to_ice_001</a></td><td>normal</td><td>E01</td><td class="status NORMAL_OK">NORMAL_OK</td><td></td><td>0</td><td>0</td><td>1.000</td><td>1.000</td><td>0.000</td></tr><tr><td><a href="html/rough_to_ice_002.html">rough_to_ice_002</a></td><td>normal</td><td>E02</td><td class="status NORMAL_OK">NORMAL_OK</td><td></td><td>0</td><td>0</td><td>1.000</td><td>1.000</td><td>0.000</td></tr><tr><td><a href="html/rough_to_ice_003.html">rough_to_ice_003</a></td><td>normal</td><td>E03</td><td class="status NORMAL_OK">NORMAL_OK</td><td></td><td>0</td><td>0</td><td>1.000</td><td>1.000</td><td>0.000</td></tr><tr><td><a href="html/rough_to_ice_004.html">rough_to_ice_004</a></td><td>normal</td><td>E04</td><td class="status NORMAL_OK">NORMAL_OK</td><td></td><td>0</td><td>0</td><td>1.000</td><td>1.000</td><td>0.000</td></tr><tr><td><a href="html/rough_to_ice_005.html">rough_to_ice_005</a></td><td>normal</td><td>E05</td><td class="status NORMAL_OK">NORMAL_OK</td><td></td><td>0</td><td>0</td><td>1.000</td><td>1.000</td><td>0.000</td></tr><tr><td><a href="html/rough_to_ice_006.html">rough_to_ice_006</a></td><td>normal</td><td>E06</td><td class="status NORMAL_OK">NORMAL_OK</td><td></td><td>0</td><td>0</td><td>1.000</td><td>1.000</td><td>0.000</td></tr><tr><td><a href="html/rough_to_ice_007.html">rough_to_ice_007</a></td><td>normal</td><td>E07</td><td class="status FALSE_ALARM">FALSE_ALARM</td><td></td><td>1</td><td>0</td><td>1.000</td><td>1.000</td><td>0.000</td></tr><tr><td><a href="html/rough_to_ice_008.html">rough_to_ice_008</a></td><td>normal</td><td>E08</td><td class="status NORMAL_OK">NORMAL_OK</td><td></td><td>0</td><td>0</td><td>1.000</td><td>1.000</td><td>0.000</td></tr></tbody>
+</table>
+</body>
+</html>

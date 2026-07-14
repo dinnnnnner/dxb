@@ -41,6 +41,7 @@ SCENARIOS = {
     "low_tire_pressure": ("低胎压", "tire_fault"),
     "slow_leak": ("慢漏气", "tire_fault"),
     "slip": ("打滑", "driving_event"),
+    "rough_to_ice": ("粗糙路面进入冰面", "road_transition"),
     "sensor_anomaly": ("传感器异常", "sensor_fault"),
 }
 
@@ -673,6 +674,228 @@ def apply_slip(
     )
 
 
+def apply_rough_to_ice(
+    times: list[float],
+    wheels: list[list[float]],
+    onset: float,
+    rng: random.Random,
+    index: int,
+    config: ScenarioConfig,
+) -> ScenarioResult:
+    """Model a rough-road segment followed by a persistent low-friction surface.
+
+    Wheel speed alone cannot reveal a friction change during steady free rolling, so
+    the variants deliberately include one coast case with no invented slip signal.
+    The other cases add bounded wheel-slip signatures caused by throttle, braking,
+    or cornering after the road transition.
+    """
+    variants = (
+        "low_mu_drive_tcs",
+        "low_mu_brake_abs",
+        "low_mu_turn_esc",
+        "coast_no_observable_slip",
+    )
+    variant = variants[index % len(variants)]
+    rough_duration = rng.uniform(2.5, 4.5)
+    rough_start = max(times[0], onset - rough_duration)
+    rough_ramp_duration = min(rng.uniform(0.20, 0.45), rough_duration / 3.0)
+    transition_duration = rng.uniform(0.15, 0.45)
+    rough_amplitude = rng.uniform(0.008, 0.025)
+    rough_common_frequency_hz = rng.uniform(5.0, 11.0)
+    rough_wheel_frequencies_hz = [
+        rng.uniform(12.0, 26.0) for _ in range(WHEEL_COUNT)
+    ]
+    rough_phases = [rng.uniform(0.0, 2.0 * math.pi) for _ in range(WHEEL_COUNT)]
+    dry_mu_proxy = rng.uniform(0.65, 0.90)
+    ice_mu_proxy = rng.uniform(0.05, 0.18)
+
+    # Preserve each wheel's normal rolling-speed ratio before roughness is injected.
+    rolling_ratios: list[float] = []
+    for target in range(WHEEL_COUNT):
+        ratios: list[float] = []
+        for time_s, row in zip(times, wheels):
+            if onset - 2.0 <= time_s < onset:
+                reference = float(median(row))
+                if reference > 1e-9:
+                    ratios.append(row[target] / reference)
+        rolling_ratios.append(
+            min(max(float(median(ratios)), 0.95), 1.05) if ratios else 1.0
+        )
+
+    # Rough asphalt is represented by a correlated body component plus a smaller
+    # wheel-local component. The disturbance fades as the vehicle reaches the ice.
+    for time_s, row in zip(times, wheels):
+        if not rough_start <= time_s <= onset + transition_duration:
+            continue
+        if time_s < rough_start + rough_ramp_duration:
+            envelope = smoothstep(
+                (time_s - rough_start) / max(rough_ramp_duration, 1e-9)
+            )
+        elif time_s <= onset:
+            envelope = 1.0
+        else:
+            envelope = 1.0 - smoothstep(
+                (time_s - onset) / max(transition_duration, 1e-9)
+            )
+
+        common = (
+            0.65
+            * math.sin(2.0 * math.pi * rough_common_frequency_hz * time_s)
+            + 0.35
+            * math.sin(
+                2.0 * math.pi * rough_common_frequency_hz * 1.73 * time_s + 0.8
+            )
+        )
+        for wheel in range(WHEEL_COUNT):
+            local = math.sin(
+                2.0 * math.pi * rough_wheel_frequencies_hz[wheel] * time_s
+                + rough_phases[wheel]
+            )
+            perturbation = rough_amplitude * envelope * (0.65 * common + 0.35 * local)
+            row[wheel] *= max(0.5, 1.0 + perturbation)
+
+    peak_time_s = onset + transition_duration
+    target_wheels: tuple[int, ...]
+    maneuver_parameters: dict[str, object]
+
+    if variant == "coast_no_observable_slip":
+        target_wheels = (0, 1, 2, 3)
+        maneuver_parameters = {
+            "wheel_speed_observability": (
+                "friction change is not directly observable during steady free rolling"
+            ),
+            "requested_peak_slip_ratio": 0.0,
+            "controlled_slip_ratio_magnitude": 0.0,
+        }
+    else:
+        rise_duration = transition_duration
+        settle_duration = rng.uniform(0.25, 0.60)
+        hold_duration = rng.uniform(0.80, 1.80)
+        recovery_duration = rng.uniform(0.30, 0.80)
+        maneuver_duration = (
+            rise_duration + settle_duration + hold_duration + recovery_duration
+        )
+
+        if variant == "low_mu_drive_tcs":
+            target_wheels = {
+                "front": (0, 1),
+                "rear": (2, 3),
+                "all": (0, 1, 2, 3),
+            }[config.driven_axle]
+            peak_slip = rng.uniform(0.12, 0.30)
+            controlled_slip = rng.uniform(0.035, 0.10)
+            signed_peak_slip = peak_slip
+            controller = "TCS"
+        elif variant == "low_mu_brake_abs":
+            target_wheels = (0, 1, 2, 3)
+            peak_slip = rng.uniform(0.25, 0.55)
+            controlled_slip = rng.uniform(0.06, 0.16)
+            signed_peak_slip = -peak_slip
+            controller = "ABS"
+        else:
+            target_wheels = (0, 1, 2, 3)
+            peak_slip = rng.uniform(0.035, 0.11)
+            controlled_slip = rng.uniform(0.01, min(0.045, peak_slip * 0.65))
+            signed_peak_slip = peak_slip
+            controller = "ESC"
+
+        wheel_gains = [rng.uniform(0.92, 1.08) for _ in range(WHEEL_COUNT)]
+        controller_frequency_hz = rng.uniform(6.0, 11.0)
+        controller_phases = [
+            rng.uniform(0.0, 2.0 * math.pi) for _ in range(WHEEL_COUNT)
+        ]
+        turn_direction = rng.choice(("left", "right"))
+        turn_sign = 1.0 if turn_direction == "left" else -1.0
+        side_signs = (-1.0, 1.0, -1.0, 1.0)
+
+        for time_s, row in zip(times, wheels):
+            elapsed = time_s - onset
+            if not 0.0 <= elapsed <= maneuver_duration:
+                continue
+            if elapsed <= rise_duration:
+                slip = peak_slip * smoothstep(elapsed / max(rise_duration, 1e-9))
+            elif elapsed <= rise_duration + settle_duration:
+                progress = (elapsed - rise_duration) / settle_duration
+                slip = peak_slip + (controlled_slip - peak_slip) * smoothstep(progress)
+            elif elapsed <= rise_duration + settle_duration + hold_duration:
+                slip = controlled_slip
+            else:
+                progress = (
+                    elapsed - rise_duration - settle_duration - hold_duration
+                ) / recovery_duration
+                slip = controlled_slip * (1.0 - smoothstep(progress))
+
+            original_row = row.copy()
+            reference = float(median(original_row))
+            if variant == "low_mu_drive_tcs" and len(target_wheels) < WHEEL_COUNT:
+                reference = float(
+                    median(
+                        original_row[wheel]
+                        for wheel in range(WHEEL_COUNT)
+                        if wheel not in target_wheels
+                    )
+                )
+
+            for wheel in target_wheels:
+                modulation = 0.90 + 0.10 * math.sin(
+                    2.0 * math.pi * controller_frequency_hz * elapsed
+                    + controller_phases[wheel]
+                )
+                wheel_slip = min(slip * wheel_gains[wheel] * modulation, 0.90)
+                free_rolling_speed = reference * rolling_ratios[wheel]
+                if variant == "low_mu_drive_tcs":
+                    row[wheel] = free_rolling_speed / max(1.0 - wheel_slip, 0.10)
+                elif variant == "low_mu_brake_abs":
+                    row[wheel] = free_rolling_speed * (1.0 - wheel_slip)
+                else:
+                    axle_gain = 1.15 if wheel < 2 else 0.85
+                    lateral_delta = (
+                        turn_sign * side_signs[wheel] * wheel_slip * axle_gain
+                    )
+                    row[wheel] = free_rolling_speed * (1.0 + lateral_delta)
+
+        maneuver_parameters = {
+            "controller": controller,
+            "maneuver_duration_s": maneuver_duration,
+            "rise_duration_s": rise_duration,
+            "controller_settle_duration_s": settle_duration,
+            "controlled_hold_duration_s": hold_duration,
+            "recovery_duration_s": recovery_duration,
+            "requested_peak_slip_ratio": signed_peak_slip,
+            "controlled_slip_ratio_magnitude": controlled_slip,
+            "controller_frequency_hz": controller_frequency_hz,
+        }
+        if variant == "low_mu_turn_esc":
+            maneuver_parameters["turn_direction"] = turn_direction
+
+    severity = 1.0 - ice_mu_proxy / dry_mu_proxy
+    return ScenarioResult(
+        scenario_start_s=rough_start,
+        scenario_peak_s=peak_time_s,
+        target_wheels=target_wheels,
+        variant=variant,
+        severity=severity,
+        parameters={
+            "model": "rough_surface_to_low_mu_transition",
+            "road_sequence": ["rough_asphalt", "ice"],
+            "rough_start_s": rough_start,
+            "ice_transition_start_s": onset,
+            "transition_duration_s": transition_duration,
+            "rough_duration_s": rough_duration,
+            "rough_ramp_duration_s": rough_ramp_duration,
+            "rough_amplitude_fraction": rough_amplitude,
+            "rough_common_frequency_hz": rough_common_frequency_hz,
+            "rough_wheel_frequencies_hz": rough_wheel_frequencies_hz,
+            "dry_mu_proxy": dry_mu_proxy,
+            "ice_mu_proxy": ice_mu_proxy,
+            "ice_persists_to_sample_end": True,
+            "friction_drop_fraction": severity,
+            "variant_cycle": list(variants),
+            **maneuver_parameters,
+        },
+    )
+
+
 def apply_sensor_anomaly(
     times: list[float],
     wheels: list[list[float]],
@@ -764,6 +987,7 @@ SCENARIO_FUNCTIONS: dict[
     "low_tire_pressure": apply_low_tire_pressure,
     "slow_leak": apply_slow_leak,
     "slip": apply_slip,
+    "rough_to_ice": apply_rough_to_ice,
     "sensor_anomaly": apply_sensor_anomaly,
 }
 

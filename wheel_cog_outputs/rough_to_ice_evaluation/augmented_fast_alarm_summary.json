@@ -1,0 +1,48 @@
+{
+  "all_event_samples": {
+    "samples": 0,
+    "detected_2s": 0,
+    "recall_2s": null,
+    "early_alarm_samples": 0,
+    "missed_samples": 0,
+    "late_samples": 0
+  },
+  "baseline_event_samples": {
+    "samples": 0,
+    "detected_2s": 0,
+    "recall_2s": null,
+    "early_alarm_samples": 0,
+    "missed_samples": 0,
+    "late_samples": 0
+  },
+  "augmented_event_samples": {
+    "samples": 0,
+    "detected_2s": 0,
+    "recall_2s": null,
+    "early_alarm_samples": 0,
+    "missed_samples": 0,
+    "late_samples": 0
+  },
+  "normal_samples": {
+    "samples": 8,
+    "samples_with_false_alarm": 1,
+    "false_alarm_events": 1
+  },
+  "detection_delay_s": {
+    "mean": null,
+    "median": null,
+    "p95": null,
+    "max": null
+  },
+  "status_counts": {
+    "NORMAL_OK": 7,
+    "FALSE_ALARM": 1
+  },
+  "dataset_dir": "rough_to_ice_dataset",
+  "manifest": "rough_to_ice_dataset/manifest.csv",
+  "series": "corrected",
+  "detection_window_s": 2.0,
+  "warmup_s": 30.0,
+  "html_mode": "all",
+  "displayed_samples": 8
+}

@@ -157,7 +157,7 @@ def interpolate_wheels(source: SourceSeries, query_times: np.ndarray) -> np.ndar
     )
 
 
-def normal_noise_pool(
+def normal_noise_std(
     source: SourceSeries, event_time_s: float, guard_s: float
 ) -> np.ndarray:
     end_s = event_time_s - guard_s
@@ -169,27 +169,26 @@ def normal_noise_pool(
             f"with {guard_s:.2f}s guard"
         )
 
-    # Remove slow vehicle motion and retain measured, cross-wheel sensor noise.
+    # Remove slow vehicle motion, then use the residual to estimate a Gaussian
+    # noise scale independently for each wheel.
     smooth = (
         pd.DataFrame(normal)
         .rolling(window=21, center=True, min_periods=1)
         .mean()
         .to_numpy(dtype=float)
     )
-    residual = normal - smooth
-    return residual[10:-10]
+    residual = (normal - smooth)[10:-10]
+    return np.std(residual, axis=0, ddof=1)
 
 
-def draw_noise(
-    pool: np.ndarray, length: int, rng: np.random.Generator
+def draw_gaussian_noise(
+    noise_std: np.ndarray, length: int, rng: np.random.Generator
 ) -> np.ndarray:
-    if len(pool) >= length:
-        start = int(rng.integers(0, len(pool) - length + 1))
-        return pool[start : start + length].copy()
-    repeats = int(np.ceil(length / len(pool)))
-    tiled = np.tile(pool, (repeats, 1))
-    offset = int(rng.integers(0, len(pool)))
-    return np.roll(tiled, -offset, axis=0)[:length].copy()
+    return rng.normal(
+        loc=0.0,
+        scale=noise_std,
+        size=(length, len(noise_std)),
+    )
 
 
 def add_interpolated_dropout(
@@ -215,7 +214,7 @@ def add_interpolated_dropout(
 
 def augment_values(
     values: np.ndarray,
-    noise_pool: np.ndarray,
+    noise_std: np.ndarray,
     speed_scale: float,
     noise_gain: float,
     dropout_probability: float,
@@ -224,7 +223,7 @@ def augment_values(
 ) -> tuple[np.ndarray, int]:
     augmented = values * speed_scale
     if noise_gain > 0.0:
-        noise = draw_noise(noise_pool, len(augmented), rng)
+        noise = draw_gaussian_noise(noise_std, len(augmented), rng)
         augmented = augmented + noise_gain * noise
     dropout_samples = add_interpolated_dropout(
         augmented, dropout_probability, max_dropout_samples, rng
@@ -251,7 +250,7 @@ def event_sample(
     time_scale: float,
     speed_scale: float,
     noise_gain: float,
-    noise_pool: np.ndarray,
+    noise_std: np.ndarray,
     dropout_probability: float,
     args: argparse.Namespace,
     rng: np.random.Generator,
@@ -260,7 +259,7 @@ def event_sample(
     values = interpolate_wheels(source, query_times)
     values, dropout_samples = augment_values(
         values,
-        noise_pool,
+        noise_std,
         speed_scale,
         noise_gain,
         dropout_probability,
@@ -277,7 +276,7 @@ def normal_sample(
     time_scale: float,
     speed_scale: float,
     noise_gain: float,
-    noise_pool: np.ndarray,
+    noise_std: np.ndarray,
     args: argparse.Namespace,
     rng: np.random.Generator,
 ) -> tuple[np.ndarray, int, float, float]:
@@ -292,7 +291,7 @@ def normal_sample(
     values = interpolate_wheels(source, query_times)
     values, dropout_samples = augment_values(
         values,
-        noise_pool,
+        noise_std,
         speed_scale,
         noise_gain,
         args.dropout_probability,
@@ -331,7 +330,7 @@ def build_dataset(args: argparse.Namespace) -> list[dict[str, object]]:
         duration_s = args.pre_s + args.post_s
         frame_count = int(round(duration_s / source.dt))
         local_times = np.arange(frame_count, dtype=float) * source.dt
-        noise_pool = normal_noise_pool(source, label.event_time_s, args.normal_guard_s)
+        noise_std = normal_noise_std(source, label.event_time_s, args.normal_guard_s)
 
         event_specs: list[tuple[int, float, float, float, float]] = [
             (0, args.pre_s, 1.0, 1.0, 0.0)
@@ -359,7 +358,7 @@ def build_dataset(args: argparse.Namespace) -> list[dict[str, object]]:
                 time_scale,
                 speed_scale,
                 noise_gain,
-                noise_pool,
+                noise_std,
                 0.0 if index == 0 else args.dropout_probability,
                 args,
                 rng,
@@ -395,7 +394,7 @@ def build_dataset(args: argparse.Namespace) -> list[dict[str, object]]:
                 time_scale,
                 speed_scale,
                 noise_gain,
-                noise_pool,
+                noise_std,
                 args,
                 rng,
             )
